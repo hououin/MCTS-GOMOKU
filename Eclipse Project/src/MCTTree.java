@@ -28,15 +28,10 @@ public class MCTTree {
 		root.state = board;
 	}
 
-	public ExpPosition randomAction1(ArrayList<ExpPosition> exp, PrintWriter w) {
+	public ExpPosition randomAction1(ArrayList<ExpPosition> exp) {
 		ExpPosition e;
 		int len = exp.size();  
-		int i = (int) ((Math.random() * len) + 0); w.println("len "+len+" i "+i); 
-		for(int j=0; j<len; j++) {
-			w.print(" j:"+j+"; "+exp.get(j).x+" "+exp.get(j).y);			
-		}
-		w.println(); 
-		w.println(exp.get(i).x+" "+exp.get(i).y); 
+		int i = (int) ((Math.random() * len) + 0); 
 		e = exp.get(i);
 		exp.set(i, exp.get(exp.size() - 1));
 		exp.remove(exp.size() - 1);
@@ -92,7 +87,7 @@ public class MCTTree {
 
 		for (int i = 0; i < len; i++) {
 
-		//	exp.add(randomAction1(shrB));
+	    	exp.add(randomAction1(shrB));
 
 		}
 		return exp;
@@ -170,34 +165,33 @@ public class MCTTree {
 		double estValue = 0;
 		double QValue = 0;
 		byte role = 30;
-		int freeP = 0;
+		int freeP = SfreePos;
 		ExpPosition e;
 		ArrayList<ExpPosition> shrB;
 		int last_i = lastI;
 		int last_j = lastJ;
 		int simNum = simulationNum;
        
-		try {
-		PrintWriter w = new PrintWriter("sim.txt");
-		w.println("test");
-		System.out.println("test");
+		//try {
+		//PrintWriter w = new PrintWriter("sim.txt");
+
 		while (simNum > 0) {             
-			System.out.println("sim "+simNum);
+			
 			boolean trigger = true;
 			copyBoard(board, simBoard);
-			w.println("-----------------------------------------------------------------------"+simNum+"-------------------------------------");
-			printBoard(simBoard,w);
+			//w.println("-----------------------------------------------------------------------"+simNum+"-------------------------------------");
+			//printBoard(simBoard,w);
 			freeP = SfreePos;
 			last_i = lastI;
 			last_j = lastJ;
 			role = 30;
-            w.println("-----------------------------------------------------------------------"+simNum+"-------------------------------------");
+            //w.println("-----------------------------------------------------------------------"+simNum+"-------------------------------------");
 			while (freeP > 0 && trigger) {
-				w.println("freeP "+freeP);
+				//w.println("freeP "+freeP);
 				shrB = shrinkBoardSize2(simBoard, last_i, last_j);
-				e = randomAction1(shrB,w);
+				e = randomAction1(shrB);
 				simBoard[e.x][e.y] = role;
-				printBoard(simBoard,w);
+				//printBoard(simBoard,w);
                 last_i = e.x;
                 last_j = e.y;
 				int win = ifWin(simBoard, role);
@@ -220,10 +214,10 @@ public class MCTTree {
 		// System.out.println(" estValue "+estValue);
 		QValue = estValue / simulationNum;
 		// System.out.println("d: "+(endTime-startTime));
-		w.close();
-		}catch(FileNotFoundException er) {
-			System.out.println("error");
-		}
+		//w.close();
+		//}catch(FileNotFoundException er) {
+		//	System.out.println("error");
+		//}
 		return QValue;
 	}
 
@@ -248,9 +242,9 @@ public class MCTTree {
 
 	public Node search(byte[][] board, int round, int lastI, int lastJ) {   // loop for selection,expansion,simulation,backpropagation.
 																			// Build MCTTree
-		try {
-			String textName = "test" + round + ".txt";
-			PrintWriter writer = new PrintWriter(textName, "UTF-8");
+		//try {
+			//String textName = "test" + round + ".txt";
+			//PrintWriter writer = new PrintWriter(textName, "UTF-8");
 
 			ArrayList<ExpPosition> exp;
 			copyBoard(board, root.state);
@@ -262,46 +256,51 @@ public class MCTTree {
 			long t = 5000000000L;
 			int repeat = 25;
 			int ix;
-			int last_i = lastI;
-			int last_j = lastJ;
 			int freeP = freePos;
 			int level = 0;
 			while (repeat > 0/* (endTime - startTime) < t */) {
 				Node temp = root;
-				writer.println("-------------------" + repeat + "------------------------");
+				temp.lastI = lastI;
+				temp.lastJ = lastJ;
+				freeP = freePos;
+				//writer.println("-------------------" + repeat + "------------------------");
 
 				// select
                 level = 0;
 				while (temp.children.size() > 0) {
-					writer.println("temp value" + temp.value);
+					//writer.println("temp value" + temp.value);
 					// select the best child
 					ix = temp.findBestChild(2);
-					for (int i = 0; i < temp.children.size(); i++) {
-						writer.println("child " + i + " uct " + temp.children.get(i).uct + " value "+ temp.children.get(i).value);								
-						printBoard(temp.children.get(i).state, writer);
-					}
+					//for (int i = 0; i < temp.children.size(); i++) {
+						//writer.println("child " + i + " uct " + temp.children.get(i).uct + " value "+ temp.children.get(i).value);								
+						//printBoard(temp.children.get(i).state, writer);
+					//}
 					temp = temp.children.get(ix);
 
-					writer.println("the best " + ix);
-					printBoard(temp.state, writer);
+					//writer.println("the best " + ix);
+					//printBoard(temp.state, writer);
 					level++;
 				}
 				// expand
 
-				exp = expansion1(temp.state, last_i, last_j);
+				exp = expansion1(temp.state, temp.lastI, temp.lastJ);
+                //writer.println("expansion shrinkBoardSize");
+                //printBoard(temp.state,writer);
 				// writer.println("expand "); for(int i=0;i<exp.size();i++){writer.print(exp.get(i).x+" "+exp.get(i).y);} writer.println();
  
 				// simulation
-				freeP = freeP + level;
+				freeP = freeP - level;
 				for (int i = 0; i < exp.size(); i++) {
 
 					Node expandNode = new Node();
 					copyBoard(temp.state, expandNode.state);
-					int x = exp.get(i).x;
-					int y = exp.get(i).y;
+					byte x = exp.get(i).x;
+					byte y = exp.get(i).y;
 					expandNode.state[x][y] = 30; // printBoard(expandNode.state, writer);
+					expandNode.lastI = x;
+					expandNode.lastJ = y;
 					expandNode.parent = temp;
-					expandNode.value = simulation1(expandNode.state,x,y,freeP); 
+					expandNode.value = simulation1(expandNode.state,x,y,freeP-1); 
 					//writer.println("sim value: "+expandNode.value);
 
 					temp.children.add(expandNode);
@@ -311,16 +310,16 @@ public class MCTTree {
 				temp.value = temp.value / exp.size();
 				// backpropagation
 				backPropagation(temp);
-				writer.println("backpropagation temp.value " + temp.value + " uct " + temp.uct + " NumV " + temp.numVisited);
+				//writer.println("backpropagation temp.value " + temp.value + " uct " + temp.uct + " NumV " + temp.numVisited);
 						
 				// endTime = System.nanoTime();
 				repeat--;
 			}
-			writer.close();
+			//writer.close();
 			ix = root.findBestChild(0);
 			return root.children.get(ix);
 
-		} catch (FileNotFoundException e) {
+		/*} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			System.out.println("error return root");
 			e.printStackTrace();
@@ -329,7 +328,7 @@ public class MCTTree {
 			e.printStackTrace();
 			System.out.println("error return root");
 		}
-		return root;
+		return root;*/
 	}
 
 	public int ifWin(byte[][] board, int role) {

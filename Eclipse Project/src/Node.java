@@ -6,6 +6,8 @@ public class Node {
    int numVisited;
    double value;
    double uct;
+   int lastI;
+   int lastJ;
    int C = 1; //constant
    byte [][] state;
    public Node() {

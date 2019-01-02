@@ -19,7 +19,7 @@ public class Gomoku {
 
 	public static void main(String[] args) {
 
-		/*MCTTree mct = new MCTTree(board);		
+		MCTTree mct = new MCTTree(board);		
 		Node nextStep;
 		int NameCounter = 1;
 		int freePos = NumFreePosition(board);
@@ -29,6 +29,7 @@ public class Gomoku {
 			mct = new MCTTree(board);
 			
 			play(board);
+			System.out.println(lastI+" "+lastJ);
 			freePos = NumFreePosition(board);
 			mct.freePos = freePos;
 			printBoard(board);
@@ -48,20 +49,20 @@ public class Gomoku {
 				break;
 			}
           
-		}*/
-		//sc.close();
+		}
+		sc.close();
         
-		MCTTree mct = new MCTTree(board);
+		/*MCTTree mct = new MCTTree(board);
 		int freePos = NumFreePosition(board)-1;
 		int c = 5;
-	//	while(c > 0) {
+		while(c > 0) {
 			play(board);
 			printBoard(board);
 	        System.out.println(mct.simulation1(board, lastI, lastJ,freePos));
-			
+			freePos--;
 			c--;
-	//	}
-        sc.close();
+		}
+        sc.close();*/
 		
 	}
 
