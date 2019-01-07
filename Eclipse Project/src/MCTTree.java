@@ -16,6 +16,7 @@ class ExpPosition { // izberi pozicijo za expansitions
 	}
 }
 
+
 public class MCTTree {
 	public final int W = 19;
 	public final int L = 19;
@@ -23,6 +24,10 @@ public class MCTTree {
 	public final int simulationNum = 20;
 	public int freePos = 0;
 
+	//Last Good Reply(LGR)
+	HashMap<Integer,ExpPosition> LGRblack = new HashMap<Integer,ExpPosition>(); //black := 30
+	HashMap<Integer,ExpPosition> LGRwhite = new HashMap<Integer,ExpPosition>(); //white := 20
+	
 	public MCTTree(byte[][] board) {
 		root = new Node();
 		root.state = board;
@@ -101,8 +106,17 @@ public class MCTTree {
 
 	}
 
-	public void test(int lastI,int lastJ) {
-		
+	public void printHashMap(HashMap<Integer,ExpPosition>LGR,PrintWriter w) {
+		int length;
+		int width;
+		for(int e : LGR.keySet()) {
+			ExpPosition eValue = LGR.get(e);
+			length = e/W;
+			width = e -(length * (W));
+				
+			w.println(" key "+length+" "+width+" value "+eValue.x+" "+eValue.y);
+		}
+		w.println();
 	}
 
 	public double simulation1(byte[][] board, int lastI, int lastJ, int SfreePos,int ixC, int i, int repeat) {
@@ -110,7 +124,7 @@ public class MCTTree {
 		byte[][] simBoard = new byte[L][W];
 		double estValue = 0;
 		double QValue = 0;
-		byte role = 30;
+		byte role = 20;
 		int freeP = SfreePos;
 		int win = 0;
 		ExpPosition e;
@@ -118,7 +132,10 @@ public class MCTTree {
 		int last_i = lastI;
 		int last_j = lastJ;
 		int simNum = simulationNum;
-       
+        //LGR
+		int last_e;
+		HashMap<Integer,ExpPosition> LGRb; // LGR for black
+		HashMap<Integer,ExpPosition> LGRw; // LGR for white
 		//try {
 		//PrintWriter w = new PrintWriter(name+".txt");
        
@@ -132,14 +149,39 @@ public class MCTTree {
 			
 			last_i = lastI;
 			last_j = lastJ;
-			role = 30;
-            //w.println("-----------------------------------------------------------------------"+simNum+"-------------------------------------");
+			role = 20;
+
+			LGRb = new HashMap<Integer,ExpPosition>();
+			LGRw = new HashMap<Integer,ExpPosition>();
+           // w.println("-----------------------------------------------------------------------"+simNum+"-------------------------------------");
 			while (freeP > 0 && trigger) {
 				//w.println("freeP "+freeP);
 				
-				shrB = shrinkBoardSize2(simBoard, last_i, last_j);									
-				e = randomAction1(shrB);				
+				shrB = shrinkBoardSize2(simBoard, last_i, last_j);	
+				
+				last_e = (last_i * (W)) + last_j;
+				
+				if(role == 30) {					
+					e = LGRblack.get(last_e);			
+				}else {
+					e = LGRwhite.get(last_e);			
+				}
+				
+				if(e == null) {
+				 // w.println("random"+role);
+				  e = randomAction1(shrB);
+				}else {
+				 // w.println("LGR "+e.x+" "+e.y);
+				}
 				simBoard[e.x][e.y] = role;
+				
+				
+				if(role == 20) {
+                   LGRw.put(last_e, e);
+                }else {
+                   LGRb.put(last_e, e);
+                }
+				
 				//printBoard(simBoard,w);
                 last_i = e.x;
                 last_j = e.y;
@@ -148,10 +190,16 @@ public class MCTTree {
 			    	 win = ifWin(simBoard, role);
 			  
 					if (win == role) {
-						if (role == 30) {
+						if (role == 30) {							
+							LGRblack.putAll(LGRb);
+					//		printHashMap(LGRblack,w);
+					//		w.println("black");
 							estValue += 1;
 							trigger = false;
 						} else {
+							LGRwhite.putAll(LGRw);
+					//		printHashMap(LGRwhite,w);
+					//		w.println("white");
 							estValue -= 3;
 							trigger = false;
 						}
@@ -221,7 +269,7 @@ public class MCTTree {
 
 				// select
                 level = 0;
-
+                
 				while (temp.children.size() > 0) {
 					//writer.println("temp value" + temp.value);
 					// select the best child
@@ -259,6 +307,9 @@ public class MCTTree {
 					expandNode.lastI = x;
 					expandNode.lastJ = y;
 					expandNode.parent = temp;	
+					//LGR
+					LGRblack.clear();
+					LGRwhite.clear();
 					expandNode.value = simulation1(expandNode.state,x,y,freeP-1,ix,i,repeat); 	
 					//writer.println("sim value: "+expandNode.value);
 
