@@ -1,17 +1,15 @@
 import java.util.Scanner;
 import java.util.ArrayList;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 public class Gomoku {
-	public static int W = 7;
-	public static int L = 7;
+	public static int W = 19;
+	public static int L = 19;
     public static int lastI = 0;
     public static int lastJ = 0;
-	public static byte[][] board = {{ 0, 0, 0, 0, 0, 0, 0},
-			                        { 0, 0, 0, 0, 0, 0, 0},
-			                        { 0, 0, 0, 0, 0, 0, 0},
-			                        { 0, 0, 0, 0, 0, 0, 0},
-			                        { 0, 0, 0, 0, 0, 0, 0},
-			                        { 0, 0, 0, 0, 0, 0, 0},
-			                        { 0, 0, 0, 0, 0, 0, 0}};
+	public static byte[][] board =  new byte[L][W];    // Nasprotnik:20 ; Agent: 30;  Mozna pozicija: 40 (zacasna oznaka)
+
 	                                                       
 
 	// public static byte[][] board = new byte[L][W];
@@ -19,6 +17,9 @@ public class Gomoku {
 
 	public static void main(String[] args) {
 
+		try {
+		PrintWriter w = new PrintWriter("testC.txt");	
+			
 		MCTTree mct = new MCTTree(board);		
 		Node nextStep;
 		int NameCounter = 1;
@@ -38,7 +39,7 @@ public class Gomoku {
 			startTime = System.nanoTime();
 			nextStep = mct.search(board, NameCounter,lastI,lastJ);
 			endTime = System.nanoTime();
-			System.out.println("time "+(endTime-startTime));
+			w.println("time "+(endTime-startTime));
 			
 			NameCounter++;
 			copyBoard(nextStep.state, board);
@@ -46,23 +47,22 @@ public class Gomoku {
             
 			freePos--;
 			if (freePos == 0) {
+				System.out.println("TIE");
 				break;
 			}
           
 		}
 		sc.close();
-        
-		/*MCTTree mct = new MCTTree(board);
-		int freePos = NumFreePosition(board)-1;
-		int c = 5;
-		while(c > 0) {
-			play(board);
-			printBoard(board);
-	        System.out.println(mct.simulation1(board, lastI, lastJ,freePos));
-			freePos--;
-			c--;
+		w.close();
+		}catch(FileNotFoundException e) {
+			
 		}
-        sc.close();*/
+		/*int counter = 10;
+        while(counter > 0) {
+        	play(board);
+        	printBoard(board);
+        	counter--;
+        }*/
 		
 	}
 
@@ -89,16 +89,24 @@ public class Gomoku {
 
 		while (waitToPlay) {
 			try {
-				System.out.println("Izberi pozicijo (napisi A do G za vrstico, 1 do 7 pa za stolpca):");
+				System.out.println("Izberi pozicijo (napisi A do S za vrstico, 1 do 19 pa za stolpca):");
 				String inputPos = sc.nextLine();
 				System.out.println(inputPos);
 				char row = inputPos.charAt(0);
-				int column = inputPos.charAt(1) - 48;
+				int column;
+				if(inputPos.length() == 3) {
+					int tens = inputPos.charAt(1) - 48;
+					int units = inputPos.charAt(2) - 48;
+					column = tens * 10 + units;
+				}else {
+				    column = inputPos.charAt(1) - 48;
+				}
+				
 				// System.out.println(row+" "+column);
 				int pRow = row - 'A';
 				int pColumn = column - 1; // board se zacne z 1, matrika pa 0;
 				// System.out.println(pRow+" "+pColumn);
-				if (pColumn >= 0 && pColumn < 7 && pRow >= 0 && pRow < 7) {
+				if (pColumn >= 0 && pColumn < W && pRow >= 0 && pRow < L) {
 					if (board[pRow][pColumn] != 30 && board[pRow][pColumn] != 20) {
 						board[pRow][pColumn] = 20;
 						lastI = pRow;
@@ -119,12 +127,23 @@ public class Gomoku {
 	}
 
 	public static void printBoard(byte[][] board) {
-		for (int i = 0; i < W; i++) {
-			System.out.println("------------------------------");
-			// System.out.println("------------------------------------------------------------------------------");
+		
+		int a;		
+		System.out.print("|");
+		for(int i = 0; i < W; i++) {			
+			if(i < 10)
+				System.out.print(" " + (i+1) + " " + "|");
+			if(i >= 10)
+				System.out.print("" + (i+1) + " " + "|");
+		}
+		System.out.println();
+		for (int i = 0; i < L; i++) {
+			 a = 65 + i;
+			//System.out.println("------------------------------");
+			System.out.println("------------------------------------------------------------------------------");
 			System.out.print("|");
-			for (int j = 0; j < L; j++) {
-
+			for (int j = 0; j < W; j++) {
+               
 				switch (board[i][j]) {
 				case 0:
 					System.out.print(" " + " " + " " + "|");
@@ -139,19 +158,20 @@ public class Gomoku {
 					System.out.print(" " + "e" + " " + "|");
 					break;
 				case 50:
-					System.out.print(" " + "s" + " " + "|");
+					System.out.print(" " + " " + " " + "|");
 					break;
 				default:
-					System.out.print(" " + board[i][j] + " " + "|");
-
+					System.out.print("  " + board[i][j] + "  " + "|");
 				}
-
+                if(j == W-1) {
+                	System.out.print(" "+(char)a);
+                }
 				// System.out.print(" " + board[i][j] + " " + "|");
 			}
 			System.out.println();
 		}
-		System.out.println("------------------------------");
-		// System.out.println("------------------------------------------------------------------------------");
+		//System.out.println("------------------------------");
+		 System.out.println("------------------------------------------------------------------------------");
 	}
 
 }

@@ -11,7 +11,7 @@ public class Node {
    int C = 1; //constant
    byte [][] state;
    public Node() {
-	 state = new byte[7][7];     	  
+	 state = new byte[19][19];     	  
    }
 
    public int findBestChild(int C) {
